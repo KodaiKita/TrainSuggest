@@ -1,128 +1,194 @@
 import 'package:flutter/material.dart';
-import 'package:vector_math/vector_math_64.dart' as vector;
+import 'package:flutter_svg/flutter_svg.dart';
 
 void main() {
-  runApp(MapApp());
+  runApp(MyApp());
 }
 
-class MapApp extends StatelessWidget {
+class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      home: TrainInfoScreen(),
+      title: 'Train Transfer App',
+      theme: ThemeData(
+        primarySwatch: Colors.blue,
+      ),
+      home: TrainMapScreen(),
     );
   }
 }
 
-class TrainInfoScreen extends StatefulWidget {
+class TrainMapScreen extends StatefulWidget {
   @override
-  _TrainInfoScreenState createState() => _TrainInfoScreenState();
+  _TrainMapScreenState createState() => _TrainMapScreenState();
 }
 
-class _TrainInfoScreenState extends State<TrainInfoScreen> {
-  // コントローラーとスケールファクタ
-  TransformationController _transformationController = TransformationController();
-  double _scaleFactor = 1.0;
-
+class _TrainMapScreenState extends State<TrainMapScreen> {
   @override
   Widget build(BuildContext context) {
+    final screenWidth = MediaQuery.of(context).size.width;
+    final carriageWidth = 40.0;
+    final carriageHeight = 20.0;
+    final carriageSpacing = 4.0; // 半分の間隔
+
+    // 車両全体の幅を計算
+    final totalCarriageWidth = (carriageWidth * 10) + (carriageSpacing * 9);
+
     return Scaffold(
-      // AppBarに戻るボタンと列車情報を表示
       appBar: AppBar(
+        backgroundColor: Color.fromARGB(255, 53, 23, 221),
+        foregroundColor: Colors.white,
         leading: IconButton(
           icon: Icon(Icons.arrow_back),
-          onPressed: () => Navigator.of(context).pop(),
+          onPressed: () {
+            // Handle back button action
+          },
         ),
-        title: Column(
+        title: Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('行き先: 新宿行き'),
-            Text('発車時刻: 13:30'),
-            Text('路線: G - 山手線'),
-            if (MediaQuery.of(context).orientation == Orientation.landscape)
-              Row(
-                children: [
-                  Text('駅名: 東京駅'),
-                  SizedBox(width: 10),
-                  Text('ホーム: 3番'),
-                ],
-              ),
+            Text('行先: ○○駅'),
+            SizedBox(width: 8),
+            Text('08:30 発'),
           ],
         ),
-      ),
-      // メインのコンテンツ
-      body: InteractiveViewer(
-        transformationController: _transformationController,
-        onInteractionUpdate: (details) {
-          setState(() {
-            _scaleFactor = details.scale;
-          });
-        },
-        child: Stack(
-          children: [
-            // 地図部分
-            Container(
-              color: Colors.grey[200],
-              child: Center(child: Text('地図がここに表示される')),
+        actions: [
+          Container(
+            margin: EdgeInsets.only(right: 16.0),
+            padding: EdgeInsets.all(8.0),
+            decoration: BoxDecoration(
+              color: Colors.blue,
+              shape: BoxShape.circle,
             ),
-            // 現在位置を示す青い丸
-            Positioned(
-              left: 100,
-              top: 200,
-              child: Icon(Icons.navigation, color: Colors.blue),
-            ),
-            // 列車の図形
-            Positioned(
-              left: 50,
-              top: 50,
-              child: Row(
-                children: List.generate(
-                  10,
-                  (index) => Container(
-                    margin: EdgeInsets.all(2),
-                    width: 40,
-                    height: 20,
-                    decoration: BoxDecoration(
-                      color: Colors.grey[(index + 1) * 100],
-                      borderRadius: BorderRadius.circular(5),
-                    ),
-                  ),
-                ),
+            child: Center(
+              child: Text(
+                'AL',
+                style: TextStyle(color: Colors.white),
               ),
             ),
-            // 乗車すべき位置にピンアイコン
+          ),
+        ],
+      ),
+      body: InteractiveViewer(
+        boundaryMargin: EdgeInsets.all(20.0),
+        minScale: 0.5,
+        maxScale: 4.0,
+        child: Stack(
+          children: [
+            // Train carriages with connected gradient
             Positioned(
-              left: 150,
               top: 50,
-              child: _scaleFactor > 2.0
-                  ? Icon(Icons.location_pin, color: Colors.blue)
-                  : Icon(Icons.arrow_upward, color: Colors.yellow),
+              left: (screenWidth - totalCarriageWidth) / 2, // 画面中央に配置
+              child: CustomPaint(
+                size: Size(totalCarriageWidth, carriageHeight),
+                painter: CarriagePainter(carriageWidth, carriageSpacing),
+              ),
             ),
-            // エスカレーター・階段などのアイコン
+            // Current position
             Positioned(
-              left: 200,
-              top: 300,
-              child: Icon(Icons.directions_walk),
+              top: 50 + carriageHeight - 20, // 車両の位置 + 車両の高さ - ピンを20px上に移動
+              left: (screenWidth - totalCarriageWidth) / 2 + 2 * (carriageWidth + carriageSpacing) + carriageWidth / 2 - 20, // 画面中央 + 2番目の車両の位置 - ピンを20px上に移動
+              child: Icon(
+                Icons.navigation,
+                color: Colors.blue,
+                size: 40,
+              ),
             ),
-            // 混雑度のグラデーション（例）
+            // Map and Pins
             Positioned(
-              left: 50,
               top: 100,
-              child: Container(
-                width: 300,
-                height: 20,
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    colors: [Colors.grey, Colors.red],
-                    stops: [0.5, 1.0], // グラデーションの位置は様々に調整可能
-                  ),
-                  borderRadius: BorderRadius.circular(5),
-                ),
+              left: 20,
+              right: 20,
+              bottom: 20,
+              child: CustomPaint(
+                painter: MapPainter(),
+              ),
+            ),
+            // Pin icon (position adjusted to be on one of the carriages)
+            Positioned(
+              top: 50 - 20, // 車両の位置 - ピンを20px上に移動
+              left: (screenWidth - totalCarriageWidth) / 2 + 2 * (carriageWidth + carriageSpacing) + carriageWidth / 2 - 20, // 画面中央 + 2番目の車両の位置 - ピン中央
+              child: Icon(
+                Icons.location_pin,
+                color: Colors.blue,
+                size: 40,
+              ),
+            ),
+            // Escalator/Stairs icons
+            Positioned(
+              top: 200,
+              left: 50,
+              child: SvgPicture.asset(
+                'assets/escalator.svg',
+                width: 40,
+                height: 40,
+              ),
+            ),
+            Positioned(
+              top: 200,
+              right: 50,
+              child: SvgPicture.asset(
+                'assets/stairs.svg',
+                width: 40,
+                height: 40,
               ),
             ),
           ],
         ),
       ),
     );
+  }
+}
+
+class CarriagePainter extends CustomPainter {
+  final double carriageWidth;
+  final double carriageSpacing;
+
+  CarriagePainter(this.carriageWidth, this.carriageSpacing);
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final gradient = LinearGradient(
+      colors: [Colors.grey[300]!, Colors.red],
+      stops: [0.3, 1.0],
+    ).createShader(Rect.fromLTWH(0, 0, size.width, size.height));
+
+    final paint = Paint()
+      ..shader = gradient
+      ..style = PaintingStyle.fill;
+
+    double left = 0.0;
+    double height = 20.0;
+
+    for (int i = 0; i < 10; i++) {
+      canvas.drawRRect(
+        RRect.fromRectAndRadius(
+            Rect.fromLTWH(left, 0, carriageWidth, height), Radius.circular(4)),
+        paint,
+      );
+      left += carriageWidth + carriageSpacing;
+    }
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) {
+    return false;
+  }
+}
+
+class MapPainter extends CustomPainter {
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..color = Colors.grey[300] ?? Colors.grey
+      ..style = PaintingStyle.fill;
+
+    // Draw map background
+    canvas.drawRect(Rect.fromLTWH(0, 0, size.width, size.height), paint);
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) {
+    return false;
   }
 }
