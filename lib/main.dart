@@ -27,9 +27,12 @@ class _TrainMapScreenState extends State<TrainMapScreen> {
   @override
   Widget build(BuildContext context) {
     final screenWidth = MediaQuery.of(context).size.width;
-    final carriageWidth = 40.0;
-    final carriageHeight = 20.0;
     final carriageSpacing = 4.0; // 半分の間隔
+    final totalSpacing = carriageSpacing * 9; // 車両間の合計間隔
+    final sidePadding = 10.0; // 左右の余白
+    final availableWidth = screenWidth - (sidePadding * 2) - totalSpacing; // 使用可能な幅
+    final carriageWidth = availableWidth / 10; // 各車両の幅
+    final carriageHeight = 20.0;
 
     // 車両全体の幅を計算
     final totalCarriageWidth = (carriageWidth * 10) + (carriageSpacing * 9);
@@ -78,7 +81,7 @@ class _TrainMapScreenState extends State<TrainMapScreen> {
             // Train carriages with connected gradient
             Positioned(
               top: 50,
-              left: (screenWidth - totalCarriageWidth) / 2, // 画面中央に配置
+              left: sidePadding,
               child: CustomPaint(
                 size: Size(totalCarriageWidth, carriageHeight),
                 painter: CarriagePainter(carriageWidth, carriageSpacing),
@@ -87,7 +90,7 @@ class _TrainMapScreenState extends State<TrainMapScreen> {
             // Current position
             Positioned(
               top: 50 + carriageHeight - 20, // 車両の位置 + 車両の高さ - ピンを20px上に移動
-              left: (screenWidth - totalCarriageWidth) / 2 + 2 * (carriageWidth + carriageSpacing) + carriageWidth / 2 - 20, // 画面中央 + 2番目の車両の位置 - ピンを20px上に移動
+              left: sidePadding + 2 * (carriageWidth + carriageSpacing) + carriageWidth / 2 - 20, // 左余白 + 2番目の車両の位置 - ピンを20px上に移動
               child: Icon(
                 Icons.navigation,
                 color: Colors.blue,
@@ -107,7 +110,7 @@ class _TrainMapScreenState extends State<TrainMapScreen> {
             // Pin icon (position adjusted to be on one of the carriages)
             Positioned(
               top: 50 - 20, // 車両の位置 - ピンを20px上に移動
-              left: (screenWidth - totalCarriageWidth) / 2 + 2 * (carriageWidth + carriageSpacing) + carriageWidth / 2 - 20, // 画面中央 + 2番目の車両の位置 - ピン中央
+              left: sidePadding + 2 * (carriageWidth + carriageSpacing) + carriageWidth / 2 - 20, // 左余白 + 2番目の車両の位置 - ピン中央
               child: Icon(
                 Icons.location_pin,
                 color: Colors.blue,
@@ -162,8 +165,7 @@ class CarriagePainter extends CustomPainter {
 
     for (int i = 0; i < 10; i++) {
       canvas.drawRRect(
-        RRect.fromRectAndRadius(
-            Rect.fromLTWH(left, 0, carriageWidth, height), Radius.circular(4)),
+        RRect.fromRectAndRadius(Rect.fromLTWH(left, 0, carriageWidth, height), Radius.circular(4)),
         paint,
       );
       left += carriageWidth + carriageSpacing;
@@ -171,9 +173,7 @@ class CarriagePainter extends CustomPainter {
   }
 
   @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) {
-    return false;
-  }
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }
 
 class MapPainter extends CustomPainter {
@@ -188,7 +188,5 @@ class MapPainter extends CustomPainter {
   }
 
   @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) {
-    return false;
-  }
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }
