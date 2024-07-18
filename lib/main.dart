@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_svg/flutter_svg.dart';
 
 void main() {
   runApp(MyApp());
@@ -50,7 +49,7 @@ class _TrainMapScreenState extends State<TrainMapScreen> {
         title: Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('行先: ○○駅'),
+            Text('XX 行き'),
             SizedBox(width: 8),
             Text('08:30 発'),
           ],
@@ -117,21 +116,32 @@ class _TrainMapScreenState extends State<TrainMapScreen> {
                 size: 40,
               ),
             ),
-            // Escalator/Stairs icons
+            // Escalator icon
             Positioned(
               top: 200,
               left: 50,
-              child: SvgPicture.asset(
-                'assets/escalator.svg',
+              child: Image.asset(
+                'assets/escalator.png',
                 width: 40,
                 height: 40,
               ),
             ),
+            // Stairs icon
             Positioned(
               top: 200,
               right: 50,
-              child: SvgPicture.asset(
-                'assets/stairs.svg',
+              child: Image.asset(
+                'assets/stairs.png',
+                width: 40,
+                height: 40,
+              ),
+            ),
+            // Toilet icon
+            Positioned(
+              top: 250,
+              right: 50,
+              child: Image.asset(
+                'assets/toilet.png',
                 width: 40,
                 height: 40,
               ),
